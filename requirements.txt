@@ -4,16 +4,20 @@ pandas
 # FACE RECOGNITION
 scikit-learn
 dlib-bin
-
 git+https://github.com/ageitgey/face_recognition_models
-setuptools
+setuptools==70.3.0
 
+# DATABASE & SECURITY
 supabase
 bcrypt
 
+# QR CODE & IMAGE
 segno
 pillow
 
+# WEB APP
 streamlit
 
-
+# AUDIO / VOICE
+librosa
+webrtcvad-wheels
