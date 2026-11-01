@@ -3,8 +3,11 @@ import streamlit as st
 from src.ui.base_layout import style_background_dashboard, style_base_layout
 from src.components.header import header_dashboard
 from src.components.footer import footer_dashboard
+from src.components.subject_card import subject_card
 
-from src.database.db import create_teacher, check_teacher_exists, teacher_login
+from src.database.db import create_teacher, check_teacher_exists, teacher_login, get_teacher_subjet
+from src.components.dialog_create_subjects import create_subject_dialog
+from src.components.dialog_share_subject import share_subject_dialog
 
 import time
 
@@ -25,7 +28,95 @@ def teacher_screen():
     
 def teacher_dashboard():
     teacher_data = st.session_state.teacher_data
-    st.header(f"Welcome back {teacher_data['name']}!", text_alignment="center")
+
+    c1, c2 = st.columns(2, vertical_alignment="center", gap="xxlarge")
+
+    with c1:
+        header_dashboard()
+    with c2:
+        st.subheader(f"Welcome back {teacher_data['name']}!", text_alignment="center")
+        if st.button("Logout", type="secondary", key="loginbackbtn", shortcut="Control + backspace"):
+            st.session_state['is_logged_in'] = False
+            del st.session_state.teacher_data
+            st.rerun()
+
+    st.space()
+
+    if "current_teacher_tab" not in st.session_state:
+        st.session_state.current_teacher_tab = 'take_attendance'
+
+    tab1, tab2, tab3 = st.columns(3)
+
+    with tab1:
+        type1 = "primary" if st.session_state.current_teacher_tab == 'take_attendance' else "tertiary"
+        if st.button('Take Attendance', type=type1, width='stretch', icon=':material/ar_on_you:'):
+            st.session_state.current_teacher_tab = 'take_attendance'
+            st.rerun()
+
+    with tab2:
+        type2 = "primary" if st.session_state.current_teacher_tab == 'manage_subects' else "tertiary"
+        if st.button('Manage Subjects', type=type2, width='stretch', icon=':material/book_ribbon:'):
+            st.session_state.current_teacher_tab = 'manage_subects'
+            st.rerun()
+
+    with tab3:
+        type3 = "primary" if st.session_state.current_teacher_tab == 'attendance_records' else "tertiary"
+        if st.button('Attendance Records', type=type3, width='stretch', icon=':material/cards_stack:'):
+            st.session_state.current_teacher_tab = 'attendance_records'
+            st.rerun()
+
+    st.divider()
+
+    if st.session_state.current_teacher_tab == "take_attendance":
+        teacher_tab_take_attendance()
+    if st.session_state.current_teacher_tab == "manage_subects":
+        teacher_tab_manage_subects()
+    if st.session_state.current_teacher_tab == "attendance_records":
+        teacher_tab_attendance_records()
+
+
+def teacher_tab_take_attendance():
+    st.header('Take AI Attendance')
+
+def teacher_tab_manage_subects():
+    
+    teacher_id = st.session_state.teacher_data['teacher_id']
+    col1, col2 = st.columns(2)
+    with col1:
+        st.header('Manage Subjects', width='stretch')
+
+    with col2:
+        if st.button('Create New Subject', width='stretch'):
+            create_subject_dialog(teacher_id)
+
+    #List all subjects
+    subjects = get_teacher_subjet(teacher_id)
+    if subjects:
+        for sub in subjects:
+            stats = [
+                ("👥", " Students", sub['total_students']),
+                ("🕐", " Classes", sub['total_classes'])
+            ]
+        def share_btn():
+            st.space()
+            
+            if st.button(f"Share code: {sub['name']}", key=f"share_{sub['suject_code']}", icon=":material/share:"):
+                share_subject_dialog(sub['name'], sub['suject_code'])
+            
+
+        subject_card(
+            name = sub['name'],
+            code = sub['suject_code'],
+            section = sub['section'],
+            stats = stats,
+            footer_callback=share_btn
+        )
+    else:
+        st.info("No Subject Found, Create One Above")
+        
+
+def teacher_tab_attendance_records():
+    st.header('Attendance Records')
 
 def login_teacher(username, password):
     if not username or not password:
