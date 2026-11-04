@@ -43,7 +43,7 @@ def teacher_dashboard():
     with c1:
         header_dashboard()
     with c2:
-        st.subheader(f"Welcome back {teacher_data['name']}!", text_alignment="center")
+        st.subheader(f"Welcome back {teacher_data['name']}!", text_alignment="left")
         if st.button("Logout", type="secondary", key="loginbackbtn", shortcut="Control + backspace"):
             st.session_state['is_logged_in'] = False
             del st.session_state.teacher_data
@@ -126,6 +126,7 @@ def teacher_tab_take_attendance():
     with c1:
         if st.button('Clear all photos', width='stretch', type='tertiary', icon=':material/delete:', disabled = not has_photos):
             st.session_state.attendance_images = []
+            st.rerun()
             
     with c2:
         
@@ -172,7 +173,7 @@ def teacher_tab_take_attendance():
                             'is_present': bool(is_present)
                         })
 
-                attendance_result_dialog(pd.DataFrame(results), attendance_to_log)
+                    attendance_result_dialog(pd.DataFrame(results), attendance_to_log)
 
     with c3:
         if st.button('use Voice Attendance', type='primary', width='stretch', icon=':material/mic:'):
