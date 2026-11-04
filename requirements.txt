@@ -21,3 +21,4 @@ pillow
 # AUDIO / VOICE
 librosa
 webrtcvad-wheels
+resemblyzer
