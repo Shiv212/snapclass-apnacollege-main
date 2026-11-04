@@ -5,7 +5,7 @@ from src.components.header import header_dashboard
 from src.components.footer import footer_dashboard
 from src.components.subject_card import subject_card
 
-from src.database.db import create_teacher, check_teacher_exists, teacher_login, get_teacher_subjet
+from src.database.db import create_teacher, check_teacher_exists, teacher_login, get_teacher_subjet, get_attendance_for_teacher
 from src.components.dialog_create_subjects import create_subject_dialog
 from src.components.dialog_share_subject import share_subject_dialog
 from src.components.dialog_add_photo import add_photos_dialog
@@ -200,20 +200,20 @@ def teacher_tab_manage_subects():
                 ("👥", " Students", sub['total_students']),
                 ("🕐", " Classes", sub['total_classes'])
             ]
-        def share_btn():
-            st.space()
-            
-            if st.button(f"Share code: {sub['name']}", key=f"share_{sub['suject_code']}", icon=":material/share:"):
-                share_subject_dialog(sub['name'], sub['suject_code'])
-            
+            def share_btn():
+                st.space()
+                
+                if st.button(f"Share code: {sub['name']}", key=f"share_{sub['suject_code']}", icon=":material/share:"):
+                    share_subject_dialog(sub['name'], sub['suject_code'])
+                
 
-        subject_card(
-            name = sub['name'],
-            code = sub['suject_code'],
-            section = sub['section'],
-            stats = stats,
-            footer_callback=share_btn
-        )
+            subject_card(
+                name = sub['name'],
+                code = sub['suject_code'],
+                section = sub['section'],
+                stats = stats,
+                footer_callback=share_btn
+            )
     else:
         st.info("No Subject Found, Create One Above")
         
@@ -221,10 +221,49 @@ def teacher_tab_manage_subects():
 def teacher_tab_attendance_records():
     st.header('Attendance Records')
 
+    teacher_id = st.session_state.teacher_data['teacher_id']
+
+    records = get_attendance_for_teacher(teacher_id)
+
+    if not records:
+        return
+
+    data = []
+
+    for r in records:
+        ts = r.get('timestamp')
+
+        data.append({
+            "ts_group": ts.split(".")[0] if ts else None,
+            "Time": datetime.fromisoformat(ts).strftime("%Y-%m-%d %I:%M %p") if ts else "N'A",
+            "Subject": r['subjects']['name'],
+            "Subject Code": r['subjects']['suject_code'],
+            "is_present": bool(r.get('is_present', False))
+        })
+
+    df = pd.DataFrame(data)
+
+    summary = (
+        df.groupby(['ts_group', 'Time', 'Subject', 'Subject Code'])
+        .agg(
+            Present_Count = ('is_present', 'sum'),
+            Total_Count = ('is_present', 'count')
+        ).reset_index()
+    )
+
+    summary['Attendance Stats'] = (
+        "✅ " + summary['Present_Count'].astype(str) + " /"
+        + summary['Total_Count'].astype(str) + ' Students'
+    )
+
+    display_df = (summary.sort_values(by='ts_group', ascending=False)
+                    [['Time', 'Subject', 'Subject Code', 'Attendance Stats']]
+                    )
+    st.dataframe(display_df, width='stretch', hide_index=True)
+
 def login_teacher(username, password):
     if not username or not password:
         return False
-
     teacher = teacher_login(username, password)
     if teacher:
         st.session_state.teacher_data = teacher
