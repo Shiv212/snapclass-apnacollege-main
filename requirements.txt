@@ -1,3 +1,6 @@
+# WEB APP
+streamlit
+
 numpy
 pandas
 
@@ -14,9 +17,6 @@ bcrypt
 # QR CODE & IMAGE
 segno
 pillow
-
-# WEB APP
-streamlit
 
 # AUDIO / VOICE
 librosa
