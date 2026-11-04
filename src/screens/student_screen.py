@@ -21,7 +21,7 @@ def student_dashboard():
     with c1:
         header_dashboard()
     with c2:
-        st.subheader(f"Welcome back {student_data['name']}!", text_alignment="center")
+        st.subheader(f"Welcome back {student_data['name']}!", text_alignment="left")
         if st.button("Logout", type="secondary", key="loginbackbtn", shortcut="Control + backspace"):
             st.session_state['is_logged_in'] = False
             del st.session_state.student_data
